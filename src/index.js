@@ -1,17 +1,92 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import * as serviceWorker from './serviceWorker';
+import { render } from 'react-dom';
+import { Stage, Layer, Image, Text } from 'react-konva';
+import useImage from 'use-image';
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
-);
+const URLImage = ({ image }) => {
+  const [img] = useImage(image.src);
+  return (
+    <Image
+      image={img}
+      x={image.x}
+      y={image.y}
+      // I will use offset to set origin to the center of the image
+      offsetX={img ? img.width / 2 : 0}
+      offsetY={img ? img.height / 2 : 0}
+    />
+  );
+};
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.unregister();
+const App = () => {
+  const dragUrl = React.useRef();
+  const stageRef = React.useRef();
+  const [images, setImages] = React.useState([]);
+  return (
+    <div>
+      Try to trag and image into the stage:
+      <br />
+      <label draggable="true" onDragStart={e => {
+          dragUrl.current = e.target.src;
+        }}  >hellloooo</label>
+
+
+      <Text
+            text="Draggable Text"
+            x={50}
+            y={50}
+            draggable
+            onDragStart={() => {
+              this.setState({
+                isDragging: true
+              });
+            }}
+            onDragEnd={e => {
+              this.setState({
+                isDragging: false,
+                x: e.target.x(),
+                y: e.target.y()
+              });
+            }}
+          />
+      <img
+        alt="lion"
+        src="https://konvajs.org/assets/lion.png"
+        draggable="true"
+        onDragStart={e => {
+          dragUrl.current = e.target.src;
+        }}
+      />
+      <div
+        onDrop={e => {
+          // register event position
+          stageRef.current.setPointersPositions(e);
+          // add image
+          setImages(
+            images.concat([
+              {
+                ...stageRef.current.getPointerPosition(),
+                src: dragUrl.current
+              }
+            ])
+          );
+        }}
+        onDragOver={e => e.preventDefault()}
+      >
+        <Stage
+          width={window.innerWidth}
+          height={window.innerHeight}
+          style={{ border: '1px solid grey' }}
+          ref={stageRef}
+        >
+          <Layer>
+            {images.map(image => {
+              return <URLImage image={image} />;
+            })}
+          </Layer>
+        </Stage>
+      </div>
+    </div>
+  );
+};
+
+render(<App />, document.getElementById('root'));
